@@ -1,6 +1,10 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.IE;
+using OpenQA.Selenium.Support.UI;
 
 namespace SeleniumWebTests
 {
@@ -9,6 +13,7 @@ namespace SeleniumWebTests
     {
         private IWebDriver _driver;
         private const string Url = "http://www.allegro.pl";
+        private const string Url2 = "http://allegro.pl/";
         private const string MainBoxClass = "main-box";
         private const string VisibleForm = "//*[@class='main-wrapper responsive-content slide-out-navigation']";
         private const string LoginLinkPath = VisibleForm + "//*[@class='login']//span";
@@ -29,9 +34,64 @@ namespace SeleniumWebTests
         private const string BucketModuleId = "cartModule";
         private const string ItemFromSearchResults = "//*[@id='featured-offers']/article[{0}]//h2//span";
         private const string ItemFromTitleFromBucketPath = "//a[@class='title']";
-        private void OpenConnection()
+		private int _waitSeconds;
+        [Test]
+        public void LoginTestFf()
         {
-            _driver = new FirefoxDriver();
+            OpenConnection("firefox");
+			Login();
+        }
+		[Test]
+        public void SearchTestFf()
+        {
+            OpenConnection("firefox");
+            Search();
+        }
+		
+		[Test]
+        public void LoginTestIe()
+        {
+            OpenConnection("ie", "C:\\Users\\maciejj\\Downloads\\", 60);
+			Login();
+        }
+        //[Test]
+        //public void SearchTestIe()
+        //{
+        //    OpenConnection("ie", "C:\\Users\\maciejj\\Downloads\\", 60);
+        //    Search();
+        //}
+		
+		[Test]
+        public void LoginTestChrome()
+        {
+            OpenConnection("chrome", "C:\\Users\\maciejj\\Downloads\\", 10);
+			Login("chrome");
+        }
+		[Test]
+        public void SearchTestChrome()
+        {
+            OpenConnection("chrome", "C:\\Users\\maciejj\\Downloads\\", 60);
+            Search("chrome");
+        }
+		
+		 private void OpenConnection(string name, string server=null, int sec=5)
+        {
+			switch(name)
+			{
+				case "firefox":
+				_driver = new FirefoxDriver();
+				break;
+				case "ie":
+				_driver = new InternetExplorerDriver(server);
+				break;
+				case "chrome":
+				_driver= new ChromeDriver(server); 
+				break;
+				default:
+				_driver= new FirefoxDriver();
+				break;
+			}
+			_waitSeconds=sec;
             _driver.Navigate().GoToUrl(Url);
         }
 
@@ -42,46 +102,77 @@ namespace SeleniumWebTests
 
         public void IsOnHomePage()
         {
-            Assert.IsTrue(_driver.FindElement(By.ClassName(MainBoxClass)).Displayed);
+            Assert.IsTrue(_driver.FindElement(By.ClassName(MainBoxClass), _waitSeconds).Displayed);
         }
+		
+		public void Search(string kind=null)
+		{
+		    try
+		    {
+		        var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(_waitSeconds));
+		        IsOnHomePage();
+		        _driver.FindElement(By.Id(SearchFieldElementId), _waitSeconds).SendKeys(SearchTxt);
+		        _driver.FindElement(By.XPath(SearchBtnElementPath), _waitSeconds).Click();
+		        Assert.IsTrue(_driver.FindElement(By.Id(SearchResultListId), _waitSeconds).Displayed);
+		        var itemTitle = _driver.FindElement(By.XPath(string.Format(ItemFromSearchResults, 1)), _waitSeconds).Text;
+		        Assert.IsTrue(itemTitle.ToLower().Contains(SearchTxt));
+		        _driver.FindElement(By.XPath(string.Format(ItemFromSearchResults, 1)), _waitSeconds).Click();
+		        Assert.IsTrue(_driver.FindElement(By.Id(ItemElementId), _waitSeconds).Displayed);
+		        _driver.FindElement(By.Id(AddToBucketBtnId), _waitSeconds).Click();
+		        IWebElement elem0;
+		        do
+		        {
+		            elem0 = _driver.FindElement(By.Id(BucketModuleId), _waitSeconds);
+		        } while (elem0.Displayed == false);
+		        Assert.IsTrue(elem0.Displayed);
+		        var elem = _driver.FindElement(By.Id(BucketModuleId), _waitSeconds);
+		        var elem2 = wait.Until(x => elem.FindElement(By.XPath(ItemFromTitleFromBucketPath)));
+		        var s = elem2.Text;
+		        Assert.AreEqual(s, itemTitle);
+		    }
+		    finally
+		    {
+		        CloseConnection();
+		    }
+		}
+		
+		public void Login(string kind=null)
+		{
+		    try
+		    {
+		        IsOnHomePage();
+		        _driver.FindElement(By.XPath(LoginLinkPath), _waitSeconds).Click();
+		        Assert.IsTrue(_driver.FindElement(By.XPath(AuthContainerElementPath), _waitSeconds).Displayed);
+		        if (kind == "chrome")
+		        {
+		            do
+		            {
+		                Log();
 
-        [Test]
-        public void LoginTest()
+		            } while (_driver.Url != Url2);
+		        }
+		        else
+		        {
+		            Log();
+		        }
+		        IsOnHomePage();
+		        Assert.AreEqual(_driver.FindElement(By.XPath(UserLoginElementPath), _waitSeconds).Text, UserLogin);
+		        _driver.FindElement(By.XPath(LogoutLinkPath), _waitSeconds).Click();
+		        IsOnHomePage();
+		        Assert.IsTrue(_driver.FindElement(By.XPath(LoginLinkPath), _waitSeconds).Displayed);
+		    }
+		    finally
+		    {
+		        CloseConnection();
+		    }
+		}
+
+        public void Log()
         {
-            OpenConnection();
-            IsOnHomePage();
-            _driver.FindElement(By.XPath(LoginLinkPath)).Click();
-            Assert.IsTrue(_driver.FindElement(By.XPath(AuthContainerElementPath)).Displayed);
-            _driver.FindElement(By.Id(InputLoginId)).SendKeys(UserLogin);
-            _driver.FindElement(By.Id(InputPasswordId)).SendKeys(UserPassword);
-            _driver.FindElement(By.XPath(LoginBtnPath)).Click();
-            IsOnHomePage();
-            Assert.AreEqual(_driver.FindElement(By.XPath(UserLoginElementPath)).Text, UserLogin);
-            _driver.FindElement(By.XPath(LogoutLinkPath)).Click();
-            IsOnHomePage();
-            Assert.IsTrue(_driver.FindElement(By.XPath(LoginLinkPath)).Displayed);
-            CloseConnection();
+            _driver.FindElement(By.Id(InputLoginId), _waitSeconds).SendKeys(UserLogin);
+            _driver.FindElement(By.Id(InputPasswordId), _waitSeconds).SendKeys(UserPassword);
+            _driver.FindElement(By.XPath(LoginBtnPath), _waitSeconds).Click();
         }
-
-        [Test]
-        public void SearchTest()
-        {
-            OpenConnection();
-            IsOnHomePage();
-            _driver.FindElement(By.Id(SearchFieldElementId)).SendKeys(SearchTxt);
-            _driver.FindElement(By.XPath(SearchBtnElementPath)).Click();
-            Assert.IsTrue(_driver.FindElement(By.Id(SearchResultListId)).Displayed);
-            var itemTitle = _driver.FindElement(By.XPath(string.Format(ItemFromSearchResults, 1))).Text;
-            Assert.IsTrue(itemTitle.ToLower().Contains(SearchTxt));
-            _driver.FindElement(By.XPath(string.Format(ItemFromSearchResults, 1))).Click();
-            Assert.IsTrue(_driver.FindElement(By.Id(ItemElementId)).Displayed);
-            _driver.FindElement(By.Id(AddToBucketBtnId)).Click();
-            Assert.IsTrue(_driver.FindElement(By.Id(BucketModuleId)).Displayed);
-            Assert.AreEqual(
-                _driver.FindElement(By.Id(BucketModuleId)).FindElement(By.XPath(ItemFromTitleFromBucketPath)).Text,
-                itemTitle);
-            CloseConnection();
-
-        }
+		
     }
 }
