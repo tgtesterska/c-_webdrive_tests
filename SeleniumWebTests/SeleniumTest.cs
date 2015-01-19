@@ -1,6 +1,8 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
 
 namespace SeleniumWebTests
 {
@@ -24,8 +26,8 @@ namespace SeleniumWebTests
         private const string SearchFieldElementId = "main-search-text";
         private const string SearchBtnElementPath = "//input[@class='sprite search-btn']";
         private const string SearchResultListId = "featured-offers";
-        private const string ItemElementId = "pagecontent1";
-        private const string AddToBucketBtnId = "add-to-cart-btn";
+        private const string AddToBucketBtnId = "//*[@id='sma-offer-buy']/div/button[1]";
+        private const string AddToBucketBtnAlternate = "//*[@id='add-to-cart-btn']";
         private const string BucketModuleId = "cartModule";
         private const string ItemFromSearchResults = "//*[@id='featured-offers']/article[{0}]//h2//span";
         private const string ItemFromTitleFromBucketPath = "//a[@class='title']";
@@ -68,17 +70,45 @@ namespace SeleniumWebTests
         public void SearchTest()
         {
             IsOnHomePage();
+
+            // tyoe search text and submit
             _driver.FindElement(By.Id(SearchFieldElementId)).SendKeys(SearchTxt);
             _driver.FindElement(By.XPath(SearchBtnElementPath)).Click();
+
+            // check search results exist
             Assert.IsTrue(_driver.FindElement(By.Id(SearchResultListId)).Displayed);
+
+            // you expect name of the 1st item to contain search text
             var itemTitle = _driver.FindElement(By.XPath(string.Format(ItemFromSearchResults, 1))).Text;
             Assert.IsTrue(itemTitle.ToLower().Contains(SearchTxt));
+
+            // click 1st result
             _driver.FindElement(By.XPath(string.Format(ItemFromSearchResults, 1))).Click();
-            Assert.IsTrue(_driver.FindElement(By.Id(ItemElementId)).Displayed);
-            _driver.FindElement(By.Id(AddToBucketBtnId)).Click();
-            Assert.IsTrue(_driver.FindElement(By.Id(BucketModuleId)).Displayed);
+
+            // add to bucket
+            var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            IWebElement addToBucketBtn;
+
+            try
+            {
+                addToBucketBtn = wait.Until(d => d.FindElement(By.XPath(AddToBucketBtnId)));
+            }
+            catch (Exception)
+            {
+                addToBucketBtn = wait.Until(d => d.FindElement(By.XPath(AddToBucketBtnAlternate)));
+            }
+
+            Assert.IsTrue(addToBucketBtn.Displayed);
+            addToBucketBtn.Click();
+
+            // check bucket is displayed
+            wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
+            var basket = wait.Until(d => d.FindElement(By.Id(BucketModuleId)));
+            Assert.IsTrue(basket.Displayed);
+
+            // check the name of product matches
             Assert.AreEqual(
-                _driver.FindElement(By.Id(BucketModuleId)).FindElement(By.XPath(ItemFromTitleFromBucketPath)).Text,
+                basket.FindElement(By.XPath(ItemFromTitleFromBucketPath)).Text,
                 itemTitle);
         }
     }
