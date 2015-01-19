@@ -17,6 +17,8 @@ namespace PageObjects
 
         private const string VisibleForm = "//*[@class='main-wrapper responsive-content slide-out-navigation']";
         private const string LoginLinkPath = VisibleForm + "//*[@class='login']//span";
+        private const string SearchFieldElementId = "main-search-text";
+        private const string SearchBtnElementPath = "//input[@class='sprite search-btn']";
 
         public HomePage(IWebDriver driver)
         {
@@ -43,6 +45,14 @@ namespace PageObjects
         public bool IsUserLoggedIn()
         {
             return !_driver.FindElement(By.XPath(LoginLinkPath)).Displayed;
+        }
+
+        public SearchResultsPage Search(string searchTerm)
+        {
+            _driver.FindElement(By.Id(HomePage.SearchFieldElementId)).SendKeys(searchTerm);
+            _driver.FindElement(By.XPath(HomePage.SearchBtnElementPath)).Click();
+
+            return new SearchResultsPage(_driver);
         }
     }
 }
