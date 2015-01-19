@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.PageObjects;
 
 namespace PageObjects
 {
@@ -11,28 +12,40 @@ namespace PageObjects
     {
         private IWebDriver _driver;
 
-        private const string InputLoginId = "userForm_login";
-        private const string InputPasswordId = "userForm_password";
-        private const string LoginBtnPath = "//button[@class='btn btn-primary']";
-        private const string AuthContainerElementPath = "//*[@class='container authentication-container']";
+        [FindsBy(How = How.Id, Using = "userForm_login")]
+        [CacheLookup]
+        private IWebElement UserName { get; set; }
+
+        [FindsBy(How = How.Id, Using = "userForm_password")]
+        [CacheLookup]
+        private IWebElement Password { get; set; }
+
+        [FindsBy(How = How.XPath, Using = "//button[@class='btn btn-primary']")]
+        [CacheLookup]
+        private IWebElement LoginButton { get; set; }
+
+        [FindsBy(How = How.XPath, Using = "//*[@class='container authentication-container']")]
+        [CacheLookup]
+        private IWebElement AuthContainer { get; set; }
 
         public LoginPage(IWebDriver driver)
         {
             _driver = driver;
+            PageFactory.InitElements(_driver, this);
         }
 
         public UserPage LoginAs(string username, string password)
         {
-            _driver.FindElement(By.Id(InputLoginId)).SendKeys(username);
-            _driver.FindElement(By.Id(InputPasswordId)).SendKeys(password);
-            _driver.FindElement(By.XPath(LoginBtnPath)).Click();
+            UserName.SendKeys(username);
+            Password.SendKeys(password);
+            LoginButton.Click();
 
             return new UserPage(_driver);
         }
 
         public bool IsLoaded()
         {
-            return _driver.FindElement(By.XPath(AuthContainerElementPath)).Displayed;
+            return AuthContainer.Displayed;
         }
     }
 }
