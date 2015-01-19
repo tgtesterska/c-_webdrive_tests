@@ -1,11 +1,11 @@
 ﻿using NUnit.Framework;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Chrome;
 
 namespace SeleniumWebTests
 {
     [TestFixture]
-    class SeleniumTest
+    public class SeleniumTest
     {
         private IWebDriver _driver;
         private const string Url = "http://www.allegro.pl";
@@ -29,13 +29,16 @@ namespace SeleniumWebTests
         private const string BucketModuleId = "cartModule";
         private const string ItemFromSearchResults = "//*[@id='featured-offers']/article[{0}]//h2//span";
         private const string ItemFromTitleFromBucketPath = "//a[@class='title']";
-        private void OpenConnection()
+
+        [SetUp]
+        public void OpenConnection()
         {
-            _driver = new FirefoxDriver();
+            _driver = new ChromeDriver();
             _driver.Navigate().GoToUrl(Url);
         }
 
-        private void CloseConnection()
+        [TearDown]
+        public void CloseConnection()
         {
             _driver.Quit();
         }
@@ -48,7 +51,6 @@ namespace SeleniumWebTests
         [Test]
         public void LoginTest()
         {
-            OpenConnection();
             IsOnHomePage();
             _driver.FindElement(By.XPath(LoginLinkPath)).Click();
             Assert.IsTrue(_driver.FindElement(By.XPath(AuthContainerElementPath)).Displayed);
@@ -60,13 +62,11 @@ namespace SeleniumWebTests
             _driver.FindElement(By.XPath(LogoutLinkPath)).Click();
             IsOnHomePage();
             Assert.IsTrue(_driver.FindElement(By.XPath(LoginLinkPath)).Displayed);
-            CloseConnection();
         }
 
         [Test]
         public void SearchTest()
         {
-            OpenConnection();
             IsOnHomePage();
             _driver.FindElement(By.Id(SearchFieldElementId)).SendKeys(SearchTxt);
             _driver.FindElement(By.XPath(SearchBtnElementPath)).Click();
@@ -80,8 +80,6 @@ namespace SeleniumWebTests
             Assert.AreEqual(
                 _driver.FindElement(By.Id(BucketModuleId)).FindElement(By.XPath(ItemFromTitleFromBucketPath)).Text,
                 itemTitle);
-            CloseConnection();
-
         }
     }
 }
