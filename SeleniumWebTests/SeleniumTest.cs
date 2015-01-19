@@ -3,6 +3,7 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
+using PageObjects;
 
 namespace SeleniumWebTests
 {
@@ -10,18 +11,13 @@ namespace SeleniumWebTests
     public class SeleniumTest
     {
         private IWebDriver _driver;
-        private const string Url = "http://www.allegro.pl";
-        private const string MainBoxClass = "main-box";
+        private HomePage _homePage;
+
         private const string VisibleForm = "//*[@class='main-wrapper responsive-content slide-out-navigation']";
-        private const string LoginLinkPath = VisibleForm + "//*[@class='login']//span";
-        private const string LogoutLinkPath = VisibleForm + "//*[@class='logout']//span";
-        private const string AuthContainerElementPath = "//*[@class='container authentication-container']";
-        private const string InputLoginId = "userForm_login";
-        private const string InputPasswordId = "userForm_password";
-        private const string LoginBtnPath = "//button[@class='btn btn-primary']";
-        private const string UserLoginElementPath = VisibleForm + "//*[@id='user-login']//span";
+
         private const string UserLogin = "tgt.tests@gmail.com";
         private const string UserPassword = "TGT_Allegro_2014";
+
         private const string SearchTxt = "laptop";
         private const string SearchFieldElementId = "main-search-text";
         private const string SearchBtnElementPath = "//input[@class='sprite search-btn']";
@@ -36,7 +32,7 @@ namespace SeleniumWebTests
         public void OpenConnection()
         {
             _driver = new ChromeDriver();
-            _driver.Navigate().GoToUrl(Url);
+            _homePage = HomePage.GoTo(_driver);
         }
 
         [TearDown]
@@ -45,31 +41,25 @@ namespace SeleniumWebTests
             _driver.Quit();
         }
 
-        public void IsOnHomePage()
-        {
-            Assert.IsTrue(_driver.FindElement(By.ClassName(MainBoxClass)).Displayed);
-        }
-
         [Test]
         public void LoginTest()
         {
-            IsOnHomePage();
-            _driver.FindElement(By.XPath(LoginLinkPath)).Click();
-            Assert.IsTrue(_driver.FindElement(By.XPath(AuthContainerElementPath)).Displayed);
-            _driver.FindElement(By.Id(InputLoginId)).SendKeys(UserLogin);
-            _driver.FindElement(By.Id(InputPasswordId)).SendKeys(UserPassword);
-            _driver.FindElement(By.XPath(LoginBtnPath)).Click();
-            IsOnHomePage();
-            Assert.AreEqual(_driver.FindElement(By.XPath(UserLoginElementPath)).Text, UserLogin);
-            _driver.FindElement(By.XPath(LogoutLinkPath)).Click();
-            IsOnHomePage();
-            Assert.IsTrue(_driver.FindElement(By.XPath(LoginLinkPath)).Displayed);
+            Assert.IsTrue(_homePage.IsLoaded());
+            var loginPage = _homePage.GoToLoginPage();
+            Assert.IsTrue(loginPage.IsLoaded());
+
+            var userPage = loginPage.LoginAs(UserLogin, UserPassword);
+            Assert.AreEqual(UserLogin, userPage.GetUserName());
+
+            var homePage = userPage.Logout();
+            Assert.IsTrue(_homePage.IsLoaded());
+            Assert.IsFalse(homePage.IsUserLoggedIn());
         }
 
         [Test]
         public void SearchTest()
         {
-            IsOnHomePage();
+            Assert.IsTrue(_homePage.IsLoaded());
 
             // tyoe search text and submit
             _driver.FindElement(By.Id(SearchFieldElementId)).SendKeys(SearchTxt);

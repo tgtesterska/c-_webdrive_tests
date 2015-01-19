@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeleniumWebTests", "SeleniumWebTests\SeleniumWebTests.csproj", "{C4B50AF2-DEEE-453E-8F1A-F10F1D530C4B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PageObjects", "PageObjects\PageObjects.csproj", "{888873D8-979B-46BD-9E7A-F10C98AF2487}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{C4B50AF2-DEEE-453E-8F1A-F10F1D530C4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4B50AF2-DEEE-453E-8F1A-F10F1D530C4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4B50AF2-DEEE-453E-8F1A-F10F1D530C4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{888873D8-979B-46BD-9E7A-F10C98AF2487}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{888873D8-979B-46BD-9E7A-F10C98AF2487}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{888873D8-979B-46BD-9E7A-F10C98AF2487}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{888873D8-979B-46BD-9E7A-F10C98AF2487}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
